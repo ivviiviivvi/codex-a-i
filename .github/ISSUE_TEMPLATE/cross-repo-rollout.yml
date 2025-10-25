@@ -1,0 +1,73 @@
+name: Cross-Repo Codex Rollout
+description: Track the steps required to adopt Codex tooling and guidance in another repository.
+title: "[Rollout] <repository name>"
+labels:
+  - rollout
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Overview
+        Use this template to capture the status of adopting Codex tooling, documentation, and automation in another repository.
+  - type: input
+    id: repo
+    attributes:
+      label: Target repository
+      description: "e.g., org/project-name"
+      placeholder: org/repo
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope of adoption
+      description: List the components, services, or packages that will be impacted.
+      placeholder: |
+        - CLI workflow updates
+        - GitHub Actions alignment
+        - Documentation refresh
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Codex readiness checklist
+      options:
+        - label: Repository has an `AGENTS.md` covering language/tooling nuances.
+        - label: Standard issue/PR templates created or updated.
+        - label: GitHub Actions mirror Codex baseline workflows.
+        - label: Sandbox/test constraints documented.
+        - label: Owners identified for ongoing maintenance.
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks & mitigations
+      description: Note blockers, dependencies, or approvals required.
+      placeholder: |
+        - Risk: Pending approval from security team.
+        - Mitigation: Review scheduled for 2024-05-15.
+  - type: input
+    id: owner
+    attributes:
+      label: DRI(s)
+      description: Primary maintainers responsible for the rollout.
+      placeholder: @username
+    validations:
+      required: true
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Timeline & key dates
+      description: Milestones, launch dates, or audit windows.
+      placeholder: |
+        - Kickoff: 2024-05-01
+        - Soft launch: 2024-05-15
+        - Audit: 2024-07-01
+  - type: textarea
+    id: updates
+    attributes:
+      label: Status updates
+      description: Provide periodic updates as tasks complete.
+  - type: textarea
+    id: followup
+    attributes:
+      label: Future expansions
+      description: Capture stretch goals or backlog items discovered during rollout.
