@@ -4,6 +4,7 @@ import type { SpawnOptions } from "child_process";
 import type { ParseEntry } from "shell-quote";
 
 import { process_patch } from "./apply-patch.js";
+import { adaptCommandForPlatform } from "./platform-commands.js";
 import { SandboxType } from "./sandbox/interface.js";
 import { execWithLandlock } from "./sandbox/landlock.js";
 import { execWithSeatbelt } from "./sandbox/macos-seatbelt.js";
@@ -47,9 +48,12 @@ export function exec(
   config: AppConfig,
   abortSignal?: AbortSignal,
 ): Promise<ExecResult> {
+  const adaptation = adaptCommandForPlatform(cmd, { log: false });
+  const shellRequired = adaptation.requiresShell || requiresShell(cmd);
+
   const opts: SpawnOptions = {
     timeout: timeoutInMillis || DEFAULT_TIMEOUT_MS,
-    ...(requiresShell(cmd) ? { shell: true } : {}),
+    ...(shellRequired ? { shell: true } : {}),
     ...(workdir ? { cwd: workdir } : {}),
   };
 
