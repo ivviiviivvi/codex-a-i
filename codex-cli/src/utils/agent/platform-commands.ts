@@ -23,7 +23,10 @@ const COMMAND_MAP: Record<string, string> = {
  */
 const OPTION_MAP: Record<string, Record<string, string>> = {
   ls: {
-    "-l": "/p",
+    // Use `/n` for a long-style listing without pagination. `/p` would pause
+    // after each screen of output, which is incompatible with the non-
+    // interactive stdin configuration enforced by `raw-exec`.
+    "-l": "/n",
     "-a": "/a",
     "-R": "/s",
   },
