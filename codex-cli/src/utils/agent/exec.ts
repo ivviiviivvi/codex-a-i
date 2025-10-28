@@ -4,6 +4,7 @@ import type { SpawnOptions } from "child_process";
 import type { ParseEntry } from "shell-quote";
 
 import { process_patch } from "./apply-patch.js";
+import { adaptCommandForPlatform } from "./platform-commands.js";
 import { SandboxType } from "./sandbox/interface.js";
 import { execWithLandlock } from "./sandbox/landlock.js";
 import { execWithSeatbelt } from "./sandbox/macos-seatbelt.js";
@@ -47,16 +48,19 @@ export function exec(
   config: AppConfig,
   abortSignal?: AbortSignal,
 ): Promise<ExecResult> {
+  const adaptation = adaptCommandForPlatform(cmd);
+  const needsShell = requiresShell(cmd) || adaptation.requiresShell;
+
   const opts: SpawnOptions = {
     timeout: timeoutInMillis || DEFAULT_TIMEOUT_MS,
-    ...(requiresShell(cmd) ? { shell: true } : {}),
+    ...(needsShell ? { shell: true } : {}),
     ...(workdir ? { cwd: workdir } : {}),
   };
 
   switch (sandbox) {
     case SandboxType.NONE: {
       // SandboxType.NONE uses the raw exec implementation.
-      return rawExec(cmd, opts, config, abortSignal);
+      return rawExec(cmd, opts, config, abortSignal, adaptation);
     }
     case SandboxType.MACOS_SEATBELT: {
       // Merge default writable roots with any user-specified ones.
