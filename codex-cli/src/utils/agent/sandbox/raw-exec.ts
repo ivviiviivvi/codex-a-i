@@ -9,7 +9,10 @@ import type {
 } from "child_process";
 
 import { log } from "../../logger/log.js";
-import { adaptCommandForPlatform } from "../platform-commands.js";
+import {
+  adaptCommandForPlatform,
+  type PlatformCommandAdaptation,
+} from "../platform-commands.js";
 import { createTruncatingCollector } from "./create-truncating-collector";
 import { spawn } from "child_process";
 import * as os from "os";
@@ -23,9 +26,11 @@ export function exec(
   options: SpawnOptions,
   config: AppConfig,
   abortSignal?: AbortSignal,
+  adaptation?: PlatformCommandAdaptation,
 ): Promise<ExecResult> {
   // Adapt command for the current platform (e.g., convert 'ls' to 'dir' on Windows)
-  const adaptedCommand = adaptCommandForPlatform(command);
+  const { command: adaptedCommand, requiresShell } =
+    adaptation ?? adaptCommandForPlatform(command);
 
   if (JSON.stringify(adaptedCommand) !== JSON.stringify(command)) {
     log(
@@ -33,6 +38,12 @@ export function exec(
         " ",
       )} -> ${adaptedCommand.join(" ")}`,
     );
+  }
+
+  const spawnOptions = requiresShell ? { ...options, shell: true } : options;
+
+  if (requiresShell && options.shell !== true) {
+    log("raw-exec: forcing shell execution for Windows built-in command");
   }
 
   const prog = adaptedCommand[0];
@@ -73,7 +84,7 @@ export function exec(
     StdioPipe,
     StdioPipe
   > = {
-    ...options,
+    ...spawnOptions,
     // Inherit any caller‑supplied stdio flags but force stdin to "ignore" so
     // the child never attempts to read from us (see lengthy comment above).
     stdio: ["ignore", "pipe", "pipe"],

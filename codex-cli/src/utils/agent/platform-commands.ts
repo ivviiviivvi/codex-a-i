@@ -7,15 +7,20 @@ import { log } from "../logger/log.js";
 /**
  * Map of Unix commands to their Windows equivalents
  */
-const COMMAND_MAP: Record<string, string> = {
-  ls: "dir",
-  grep: "findstr",
-  cat: "type",
-  rm: "del",
-  cp: "copy",
-  mv: "move",
-  touch: "echo.>",
-  mkdir: "md",
+interface CommandMapEntry {
+  replacement: string;
+  requiresShell?: boolean;
+}
+
+const COMMAND_MAP: Record<string, CommandMapEntry> = {
+  ls: { replacement: "dir", requiresShell: true },
+  grep: { replacement: "findstr" },
+  cat: { replacement: "type", requiresShell: true },
+  rm: { replacement: "del", requiresShell: true },
+  cp: { replacement: "copy", requiresShell: true },
+  mv: { replacement: "move", requiresShell: true },
+  touch: { replacement: "echo.>", requiresShell: true },
+  mkdir: { replacement: "md", requiresShell: true },
 };
 
 /**
@@ -41,29 +46,37 @@ const OPTION_MAP: Record<string, Record<string, string>> = {
  * @param command The command array to adapt
  * @returns The adapted command array
  */
-export function adaptCommandForPlatform(command: Array<string>): Array<string> {
+export interface PlatformCommandAdaptation {
+  command: Array<string>;
+  requiresShell: boolean;
+}
+
+export function adaptCommandForPlatform(
+  command: Array<string>,
+): PlatformCommandAdaptation {
   // If not on Windows, return the original command
   if (process.platform !== "win32") {
-    return command;
+    return { command, requiresShell: false };
   }
 
   // Nothing to adapt if the command is empty
   if (command.length === 0) {
-    return command;
+    return { command, requiresShell: false };
   }
 
   const cmd = command[0];
 
   // If cmd is undefined or the command doesn't need adaptation, return it as is
   if (!cmd || !COMMAND_MAP[cmd]) {
-    return command;
+    return { command, requiresShell: false };
   }
 
   log(`Adapting command '${cmd}' for Windows platform`);
 
   // Create a new command array with the adapted command
   const adaptedCommand = [...command];
-  adaptedCommand[0] = COMMAND_MAP[cmd];
+  const { replacement, requiresShell = false } = COMMAND_MAP[cmd];
+  adaptedCommand[0] = replacement;
 
   // Adapt options if needed
   const optionsForCmd = OPTION_MAP[cmd];
@@ -78,5 +91,5 @@ export function adaptCommandForPlatform(command: Array<string>): Array<string> {
 
   log(`Adapted command: ${adaptedCommand.join(" ")}`);
 
-  return adaptedCommand;
+  return { command: adaptedCommand, requiresShell };
 }
