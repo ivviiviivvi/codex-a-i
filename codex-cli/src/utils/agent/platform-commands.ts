@@ -23,7 +23,8 @@ const COMMAND_MAP: Record<string, string> = {
  */
 const OPTION_MAP: Record<string, Record<string, string>> = {
   ls: {
-    "-l": "/p",
+    // `/q` shows ownership details similar to `ls -l` without pausing for input
+    "-l": "/q",
     "-a": "/a",
     "-R": "/s",
   },
