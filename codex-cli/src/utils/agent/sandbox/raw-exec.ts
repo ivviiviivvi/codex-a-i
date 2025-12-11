@@ -25,7 +25,8 @@ export function exec(
   abortSignal?: AbortSignal,
 ): Promise<ExecResult> {
   // Adapt command for the current platform (e.g., convert 'ls' to 'dir' on Windows)
-  const adaptedCommand = adaptCommandForPlatform(command);
+  const { command: adaptedCommand, requiresShell } =
+    adaptCommandForPlatform(command);
 
   if (JSON.stringify(adaptedCommand) !== JSON.stringify(command)) {
     log(
@@ -68,12 +69,14 @@ export function exec(
   // Even if you pass `{stdio: ["ignore", "pipe", "pipe"] }` to execFile(), the
   // hang still happens as the `stdio` is seemingly ignored. Using spawn()
   // works around this issue.
+  const baseOptions = requiresShell ? { ...options, shell: true } : options;
+
   const fullOptions: SpawnOptionsWithStdioTuple<
     StdioNull,
     StdioPipe,
     StdioPipe
   > = {
-    ...options,
+    ...baseOptions,
     // Inherit any caller‑supplied stdio flags but force stdin to "ignore" so
     // the child never attempts to read from us (see lengthy comment above).
     stdio: ["ignore", "pipe", "pipe"],
